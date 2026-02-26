@@ -3,15 +3,20 @@ const db = require("../db");
 
 const router = express.Router();
 
-// Vulnerable: no auth + userId from client
-router.post("/comment", (req, res) => {
-  const { userId, content } = req.body || {};
-  if (!userId || !content) return res.status(400).json({ error: "Bad payload" });
+const requireAuth = require("../middleware/requireAuth");
+
+router.post("/comment", requireAuth, (req, res) => {
+  const { content } = req.body || {};
+  if (!content || typeof content !== "string") {
+    return res.status(400).json({ error: "Bad payload" });
+  }
+
+  const userId = req.session.user.id;
 
   db.prepare("INSERT INTO comments (userId, content, createdAt) VALUES (?, ?, ?)")
     .run(userId, content, new Date().toISOString());
 
-  res.json({ message: "Comment saved (vulnerable)" });
+  res.json({ message: "Comment saved (secure)" });
 });
 
 router.get("/comments", (req, res) => {
