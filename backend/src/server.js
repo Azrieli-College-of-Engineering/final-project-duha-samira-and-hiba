@@ -4,6 +4,10 @@ require("./db");
 
 const app = express();
 
+const authRoutes = require("./routes/auth");
+const scoreRoutes = require("./routes/score");
+const commentRoutes = require("./routes/comments");
+
 app.use(express.json());
 
 app.use(
@@ -22,6 +26,10 @@ app.use(
 app.get("/api/health", (req, res) => {
   res.json({ status: "Backend is running" });
 });
+
+app.use("/api", authRoutes);
+app.use("/api", scoreRoutes);
+app.use("/api", commentRoutes);
 
 const PORT = 3000;
 
