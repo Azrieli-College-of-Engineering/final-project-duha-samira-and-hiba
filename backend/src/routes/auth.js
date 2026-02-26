@@ -17,13 +17,14 @@ router.post("/register", (req, res) => {
   }
 });
 
-// LOGIN (INTENTIONALLY VULNERABLE: SQL Injection)
 router.post("/login", (req, res) => {
   const { username, password } = req.body || {};
   if (!username || !password) return res.status(400).json({ error: "Missing fields" });
 
-  const query = `SELECT * FROM users WHERE username='${username}' AND password='${password}'`;
-  const user = db.prepare(query).get();
+  
+const user = db
+  .prepare("SELECT * FROM users WHERE username = ? AND password = ?")
+  .get(username, password);
 
   if (!user) return res.status(401).json({ error: "Invalid credentials" });
 
