@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>Memory Game — Security Report</title>
+    <link rel="stylesheet" href="./css/styles.css" />
+</head>
+
+<body>
+    <div class="container">
+        <div class="brand">
+            <div>
+                <h1 style="margin:0;">Security Report</h1>
+                <p class="small" style="margin:6px 0 0;">
+                    Web Security Final Project — Vulnerable vs Secure Demonstration
+                </p>
+            </div>
+
+            <div class="row">
+                <a class="btn" href="./game.html">← Back to Game</a>
+                <a class="btn btn-ghost" href="./index.html">Login</a>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2 style="margin:0 0 10px;">What we demonstrated (Vulnerable)</h2>
+            <div class="small">
+                This project intentionally demonstrates common web vulnerabilities, then compares them with secure
+                fixes.
+            </div>
+
+            <div class="hr"></div>
+
+            <h3 style="margin:0 0 8px;">1) Stored XSS (Comments)</h3>
+            <ul class="small" style="margin-top:6px;">
+                <li><b>Exploit:</b> In VULNERABLE mode, comments are rendered using <code>innerHTML</code>.</li>
+                <li><b>Payload:</b> <code>&lt;img src=x onerror=alert('XSS')&gt;</code></li>
+                <li><b>Impact:</b> attacker can execute JavaScript on other users.</li>
+                <li><b>Fix:</b> Secure mode uses <code>textContent</code> / DOM text nodes.</li>
+            </ul>
+
+            <div class="hr"></div>
+
+            <h3 style="margin:0 0 8px;">2) Score Tampering (Client-side trust)</h3>
+            <ul class="small" style="margin-top:6px;">
+                <li><b>Exploit:</b> edit <code>mg_scores</code> in LocalStorage and set score to 99999.</li>
+                <li><b>Impact:</b> leaderboard integrity is broken.</li>
+                <li><b>Fix:</b> backend must validate or compute score; never trust client values.</li>
+            </ul>
+
+            <div class="hr"></div>
+
+            <h3 style="margin:0 0 8px;">3) Identity / Session Tampering</h3>
+            <ul class="small" style="margin-top:6px;">
+                <li><b>Exploit:</b> edit <code>mg_session</code> in LocalStorage and set user to “Admin”.</li>
+                <li><b>Impact:</b> impersonation + fake scores/comments.</li>
+                <li><b>Fix:</b> server-side sessions with HttpOnly cookies + authorization checks.</li>
+            </ul>
+        </div>
+
+        <div class="grid2" style="margin-top:16px;">
+            <div class="card">
+                <h2 style="margin:0 0 10px;">How to run the demo</h2>
+                <ol class="small" style="margin-top:6px;">
+                    <li>Go to the game page and play once.</li>
+                    <li>Try XSS payload in VULNERABLE comments mode.</li>
+                    <li>Open DevTools → Application → Local Storage → edit <code>mg_scores</code>.</li>
+                    <li>Edit <code>mg_session</code> to impersonate a user.</li>
+                    <li>Use <b>Reset Demo</b> to clean everything between demos.</li>
+                </ol>
+            </div>
+
+            <div class="card">
+                <h2 style="margin:0 0 10px;">Secure version plan (after backend link)</h2>
+                <ul class="small" style="margin-top:6px;">
+                    <li>Use server sessions (HttpOnly cookies).</li>
+                    <li>Authorize score/comment actions using session userId only.</li>
+                    <li>Validate and/or compute score on the backend.</li>
+                    <li>Sanitize output (or render as text) for comments.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
