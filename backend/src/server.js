@@ -1,3 +1,4 @@
+const path = require("path");
 const express = require("express");
 const session = require("express-session");
 require("./db");
@@ -9,12 +10,13 @@ const scoreRoutes = require("./routes/score");
 const commentRoutes = require("./routes/comments");
 
 app.use(express.json());
+app.use(express.static(path.join(__dirname, "../../frontend")));
 
 app.use(
   session({
     secret: "dev-secret",
     resave: false,
-    saveUninitialized:false,
+    saveUninitialized: false,
     cookie: {
       httpOnly: true,
       sameSite: "lax",
@@ -34,5 +36,5 @@ app.use("/api", commentRoutes);
 const PORT = 3000;
 
 app.listen(PORT, () => {
-  console.log( `Server running on http://localhost:${PORT}`);
+  console.log(`Server running on http://localhost:${PORT}`);
 });
