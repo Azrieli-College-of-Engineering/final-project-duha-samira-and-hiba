@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>Memory Game — Login</title>
+    <link rel="stylesheet" href="./css/styles.css" />
+</head>
+
+<body>
+    <div class="container">
+        <div class="brand">
+            <div>
+                <h1>Memory Game</h1>
+                <p>Web Security Final Project — Vulnerable vs Secure demo</p>
+            </div>
+            <div class="badge">🎯 Goal: show XSS / Auth issues, then fix them</div>
+        </div>
+
+        <div class="grid2">
+            <div class="card">
+                <h2>Login</h2>
+                <div class="small">Use any username/password for now (mock). Later it connects to backend.</div>
+
+                <div class="field">
+                    <label for="loginUser">Username</label>
+                    <input id="loginUser" placeholder="e.g. duha" autocomplete="username" />
+                </div>
+
+                <div class="field">
+                    <label for="loginPass">Password</label>
+                    <input id="loginPass" type="password" placeholder="••••" autocomplete="current-password" />
+                </div>
+
+                <div class="row" style="margin-top:14px;">
+                    <button id="loginBtn" class="btn">Login</button>
+                    <a id="skipBtn" class="small" href="#">Skip to game →</a>
+                </div>
+
+                <div id="loginMsg" class="toast" style="display:none;"></div>
+            </div>
+
+            <div class="card">
+                <h2>Register</h2>
+                <div class="small">Mock register today. Tomorrow: real API call + session cookie.</div>
+
+                <div class="field">
+                    <label for="regUser">Username</label>
+                    <input id="regUser" placeholder="choose username" autocomplete="username" />
+                </div>
+
+                <div class="field">
+                    <label for="regPass">Password</label>
+                    <input id="regPass" type="password" placeholder="choose password" autocomplete="new-password" />
+                </div>
+
+                <div class="row" style="margin-top:14px;">
+                    <button id="registerBtn" class="btn btn-warn">Register</button>
+                    <span class="small">After register you can login.</span>
+                </div>
+
+                <div id="regMsg" class="toast" style="display:none;"></div>
+            </div>
+        </div>
+
+        <div class="hr"></div>
+        <div class="small">
+            Tip: Later you will demonstrate vulnerabilities (SQLi / Stored XSS / Broken Auth) and then secure fixes.
+        </div>
+    </div>
+
+    <script type="module" src="./js/auth.js"></script>
+</body>
+
+</html>
