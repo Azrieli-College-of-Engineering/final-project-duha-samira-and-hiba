@@ -6,7 +6,7 @@ const router = express.Router();
 
 router.post("/score", requireAuth, (req, res) => {
   const { score } = req.body || {};
-  if (typeof score !== "number") return res.status(400).json({ error: "Bad payload" });
+  if (typeof score !== "number" || score < 0 ) return res.status(400).json({ error: "Invalid score" });
 
   const userId = req.session.user.id;
 
