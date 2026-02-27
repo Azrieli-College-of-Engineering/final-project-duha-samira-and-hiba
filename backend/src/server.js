@@ -1,26 +1,30 @@
 const express = require("express");
 const session = require("express-session");
-require("./db");
+const path = require("path");
 
-const app = express();
-app.disable("x-powered-by");
+require("./db");
 
 const authRoutes = require("./routes/auth");
 const scoreRoutes = require("./routes/score");
 const commentRoutes = require("./routes/comments");
 
+const app = express();
+app.disable("x-powered-by");
+
 app.use(express.json());
+
+app.use(express.static(path.join(__dirname, "..", "..", "..", "frontend")));
 
 app.use(
   session({
     secret: "dev-secret",
     resave: false,
-    saveUninitialized:false,
+    saveUninitialized: false,
     cookie: {
       httpOnly: true,
       sameSite: "lax",
-      secure: false
-    }
+      secure: false,
+    },
   })
 );
 
@@ -33,7 +37,6 @@ app.use("/api", scoreRoutes);
 app.use("/api", commentRoutes);
 
 const PORT = 3000;
-
 app.listen(PORT, () => {
-  console.log( `Server running on http://localhost:${PORT}`);
+  console.log(`Server running on http://localhost:${PORT}`);
 });
