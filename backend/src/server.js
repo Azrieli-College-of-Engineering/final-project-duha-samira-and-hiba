@@ -3,6 +3,7 @@ const session = require("express-session");
 require("./db");
 
 const app = express();
+app.disable("x-powered-by");
 
 const authRoutes = require("./routes/auth");
 const scoreRoutes = require("./routes/score");
