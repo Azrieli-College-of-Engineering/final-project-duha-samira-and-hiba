@@ -3,7 +3,10 @@
 // IMPORTANT: open pages from http://localhost:3000 (same origin)
 
 const KEY_SESSION = "mg_session";
-
+const KEY_MODE = "mg_mode";
+function getMode() {
+    return localStorage.getItem(KEY_MODE) || "secure";
+}
 // -------------------- helpers --------------------
 async function apiFetch(path, options = {}) {
     const res = await fetch(path, {
@@ -67,7 +70,11 @@ export async function register(username, password) {
 }
 
 export async function login(username, password) {
-    const data = await apiFetch("/api/login", {
+    const mode = getMode(); // "secure" | "vuln"
+
+    const path = mode === "vuln" ? "/api/login" : "/api/login-secure";
+
+    const data = await apiFetch(path, {
         method: "POST",
         body: JSON.stringify({ username, password }),
     });
@@ -77,7 +84,6 @@ export async function login(username, password) {
     }
     return data;
 }
-
 export async function logout() {
     const data = await apiFetch("/api/logout", { method: "POST" });
     clearSession();
