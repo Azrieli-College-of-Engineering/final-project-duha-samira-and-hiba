@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Memory Game — Play</title>
+    <link rel="stylesheet" href="./css/styles.css" />
+</head>
+
+<body>
+    <div class="container">
+
+        <div class="topbar">
+            <div class="pill">👤 <span id="userPill">User: guest</span></div>
+
+            <div class="row">
+                <div class="pill">⏱️ <span id="timePill">Time: 0s</span></div>
+                <div class="pill">⭐ <span id="scorePill">Score: 0</span></div>
+
+                <button id="restartBtn" class="btn">Restart</button>
+
+                <!-- NEW: Reset Demo (Option A) -->
+                <button id="resetDemoBtn" class="btn btn-warn" title="Clears demo data (scores/comments/session)">
+                    Reset Demo
+                </button>
+
+                <!-- NEW: Security Report -->
+                <a class="btn btn-ghost" href="./report.html" style="display:inline-flex;align-items:center;gap:8px;">
+                    📄 Security Report
+                </a>
+
+                <button id="logoutBtn" class="btn btn-ghost">Logout</button>
+            </div>
+        </div>
+
+        <div class="gameLayout">
+            <!-- Left: Game -->
+            <div class="card">
+                <h2>Game</h2>
+                <div class="small">Match all pairs. +10 for match, -1 for wrong attempt.</div>
+
+                <div class="gameMeta">
+                    <div class="field" style="margin:0; min-width:170px;">
+                        <label for="difficultySelect">Difficulty</label>
+                        <select id="difficultySelect">
+                            <option value="easy" selected>Easy (4×4)</option>
+                            <option value="medium">Medium (5×4)</option>
+                            <option value="hard">Hard (6×4)</option>
+                        </select>
+                    </div>
+
+                    <div class="statStrip">
+                        <div class="stat">
+                            <div class="statLabel">Moves</div>
+                            <div id="movesPill" class="statValue">0</div>
+                        </div>
+                        <div class="stat">
+                            <div class="statLabel">Matches</div>
+                            <div id="pairsPill" class="statValue">0/0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="boardWrap">
+                    <div id="board" class="board"></div>
+                </div>
+
+                <div class="row" style="margin-top:14px;">
+                    <button id="saveScoreBtn" class="btn btn-ghost">Save Score</button>
+                    <div id="saveMsg" class="toast ok" style="display:none;">Saved locally (backend not running).</div>
+                </div>
+
+                <div class="hint">
+                    Tips:
+                    <ul style="margin:8px 0 0 18px;">
+                        <li>Try to remember positions before flipping.</li>
+                        <li>Fewer moves = better score.</li>
+                        <li>Increase difficulty for a challenge.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Right: Comments + Leaderboard -->
+            <div class="card">
+                <div class="row" style="align-items:flex-start;">
+                    <div>
+                        <h2 style="margin-bottom:6px;">Comments</h2>
+                        <div class="small">Vulnerable uses <b>innerHTML</b> (Stored XSS demo). Secure uses
+                            <b>textContent</b>.
+                        </div>
+                    </div>
+
+                    <div class="field" style="min-width:170px; margin-top:0;">
+                        <label for="modeSelect">Mode</label>
+                        <select id="modeSelect">
+                            <option value="secure" selected>SECURE</option>
+                            <option value="vuln">VULNERABLE</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label for="commentInput">Write a comment</label>
+                    <textarea id="commentInput" rows="3"
+                        placeholder="Try: &lt;img src=x onerror=alert('XSS')&gt; (in vulnerable mode)"></textarea>
+                </div>
+
+                <div class="row" style="margin-top:10px;">
+                    <button id="addCommentBtn" class="btn">Add Comment</button>
+                    <div id="commentMsg" class="toast" style="display:none;"></div>
+                </div>
+
+                <div id="commentsList" class="list"></div>
+
+                <div class="hr"></div>
+
+                <h2 style="margin:0;">Leaderboard</h2>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Score</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Win Modal -->
+    <div id="winOverlay" class="overlay" style="display:none;" aria-hidden="true">
+        <div class="modal">
+            <div class="modalHeader">
+                <div class="modalTitle">🏆 You won!</div>
+                <button id="closeWinBtn" class="iconBtn" aria-label="Close">✕</button>
+            </div>
+            <div class="small">Nice work. Here are your stats:</div>
+
+            <div class="modalGrid">
+                <div class="modalStat">
+                    <div class="k">Time</div>
+                    <div id="winTime" class="v">0s</div>
+                </div>
+                <div class="modalStat">
+                    <div class="k">Moves</div>
+                    <div id="winMoves" class="v">0</div>
+                </div>
+                <div class="modalStat">
+                    <div class="k">Score</div>
+                    <div id="winScore" class="v">0</div>
+                </div>
+            </div>
+
+            <div class="row" style="margin-top:14px;">
+                <button id="playAgainBtn" class="btn btn-ghost">Play Again</button>
+            </div>
+
+            <div class="hint" style="margin-top:10px;">
+                Tip: Challenge yourself by completing the game in fewer moves.
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="./js/game.js"></script>
+</body>
+
+</html>

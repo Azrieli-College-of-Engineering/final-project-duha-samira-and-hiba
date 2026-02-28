@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>Memory Game — Security Report</title>
+    <link rel="stylesheet" href="./css/styles.css" />
+</head>
+
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="brand">
+            <div>
+                <h1 style="margin:0;">Security Report</h1>
+                <p class="small" style="margin:6px 0 0;">
+                    Web Security Final Project — Memory Game (Frontend + Backend)
+                </p>
+            </div>
+
+            <div class="row">
+                <a class="btn" href="./game.html">← Back to Game</a>
+                <a class="btn btn-ghost" href="./index.html">Login</a>
+            </div>
+        </div>
+
+        <!-- Summary -->
+        <div class="card">
+            <h2 style="margin:0 0 10px;">Project Summary</h2>
+            <div class="small">
+                This project is a Memory Game that includes a backend API for authentication, comments, and leaderboard.
+                It demonstrates common vulnerabilities and their secure alternatives.
+            </div>
+
+            <div class="hr"></div>
+
+            <h3 style="margin:0 0 8px;">Backend API (used by the frontend)</h3>
+            <ul class="small" style="margin-top:6px;">
+                <li><code>POST /api/register</code> — create a user</li>
+                <li><code>POST /api/login</code> — login (Express session cookie)</li>
+                <li><code>POST /api/logout</code> — logout</li>
+                <li><code>GET /api/me</code> — current session user</li>
+                <li><code>POST /api/score</code> — save a score</li>
+                <li><code>GET /api/leaderboard</code> — leaderboard</li>
+                <li><code>POST /api/comment</code> — add a comment</li>
+                <li><code>GET /api/comments</code> — list comments</li>
+            </ul>
+
+
+        </div>
+
+        <!-- Vulnerabilities -->
+        <div class="card" style="margin-top:16px;">
+            <h2 style="margin:0 0 10px;">What we demonstrated (Vulnerable)</h2>
+            <div class="small">
+                The following issues represent common real-world web vulnerabilities. Some are shown intentionally
+                (demo),
+                and some can appear when the backend trusts the client too much.
+            </div>
+
+            <div class="hr"></div>
+
+            <!-- 1) Stored XSS -->
+            <h3 style="margin:0 0 8px;">1) Stored XSS (Comments)</h3>
+            <ul class="small" style="margin-top:6px;">
+                <li><b>Where:</b> Comments feature.</li>
+                <li><b>Exploit:</b> In <b>VULNERABLE</b> mode, comments are rendered using <code>innerHTML</code>
+                    (HTML is interpreted instead of displayed as text).</li>
+                <li><b>Example payload:</b> <code>&lt;img src=x onerror=alert('XSS')&gt;</code></li>
+                <li><b>Impact:</b> Attacker can execute JavaScript in the victim’s browser when the stored comment is
+                    viewed
+                    (session hijacking, UI manipulation, fake actions, etc.).</li>
+            </ul>
+
+            <div class="hr"></div>
+
+            <!-- 2) Client-side trust / score tampering -->
+            <h3 style="margin:0 0 8px;">2) Client-Side Trust (Score Tampering via API)</h3>
+            <ul class="small" style="margin-top:6px;">
+                <li><b>Where:</b> Leaderboard / score submission.</li>
+                <li><b>Exploit:</b> If the server accepts a score value directly from the client, an attacker can send
+                    an
+                    arbitrary number (e.g., 999999) or try to submit a score for another user by changing
+                    <code>userId</code>
+                    in the request body.
+                </li>
+                <li><b>Impact:</b> Leaderboard integrity is broken (fake scores, unfair ranking).</li>
+                <li><b>Note:</b> Even if the UI blocks guests from saving, an attacker can still craft requests manually
+                    in DevTools/console unless the server enforces authorization.</li>
+            </ul>
+
+            <div class="hr"></div>
+
+            <!-- 3) Broken Access Control / IDOR -->
+            <h3 style="margin:0 0 8px;">3) Broken Access Control / IDOR (User Impersonation)</h3>
+            <ul class="small" style="margin-top:6px;">
+                <li><b>Where:</b> POST <code>/api/comment</code> and POST <code>/api/score</code>.</li>
+                <li><b>Exploit:</b> If the backend uses <code>userId</code> from the request body instead of the session
+                    user,
+                    an attacker can submit actions as another user by sending a different <code>userId</code>.</li>
+                <li><b>Impact:</b> Impersonation + fake comments/scores under other accounts.</li>
+            </ul>
+
+            <div class="hr"></div>
+
+            <!-- 4) SQL Injection (if present) -->
+            <h3 style="margin:0 0 8px;">4) SQL Injection Risk (Authentication)</h3>
+            <ul class="small" style="margin-top:6px;">
+                <li><b>Where:</b> Login/registration database queries.</li>
+                <li><b>Exploit:</b> If SQL queries are built using string concatenation/interpolation, attackers can
+                    inject SQL
+                    to bypass authentication or extract data.</li>
+                <li><b>Impact:</b> Unauthorized access, data leakage, account takeover.</li>
+                <li><b>Fix:</b> Always use parameterized queries / prepared statements.</li>
+            </ul>
+
+
+        </div>
+
+        <!-- Secure fixes -->
+        <div class="grid2" style="margin-top:16px;">
+            <div class="card">
+                <h2 style="margin:0 0 10px;">Secure version (what we implemented / should implement)</h2>
+                <ul class="small" style="margin-top:6px;">
+                    <li><b>Stored XSS fix:</b> render comments as text using <code>textContent</code> (SECURE mode) or
+                        sanitize
+                        HTML on output.</li>
+                    <li><b>Server-side authorization:</b> protect sensitive routes with authentication middleware
+                        (<code>requireAuth</code>) and reject guest actions.</li>
+                    <li><b>Session identity only:</b> ignore <code>userId</code> sent by the client; use
+                        <code>req.session.user.id</code> on the server.
+                    </li>
+                    <li><b>Score validation:</b> validate score ranges and/or compute score server-side, not trusting
+                        the client
+                        number.</li>
+                    <li><b>SQL Injection fix:</b> parameterized queries everywhere.</li>
+                    <li><b>Password storage:</b> hash passwords (bcrypt) instead of storing raw passwords.</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h2 style="margin:0 0 10px;">How to run the demo (steps)</h2>
+                <ol class="small" style="margin-top:6px;">
+                    <li>Open <code>index.html</code> → Register → Login.</li>
+                    <li>Open <code>game.html</code> and play a round to create a score.</li>
+                    <li>Go to <b>Comments</b> → switch to <b>VULNERABLE</b> and submit the XSS payload.</li>
+                    <li>Refresh the page and observe that the payload executes (Stored XSS).</li>
+                    <li>Switch to <b>SECURE</b> and submit the same payload (it should display as text, not execute).
+                    </li>
+                    <li>(Optional) Open DevTools → Network and inspect <code>/api/score</code> and
+                        <code>/api/comment</code>
+                        requests to verify session cookies are used.
+                    </li>
+                    <li>Use <b>Reset Demo</b> / logout to clean up and repeat.</li>
+                </ol>
+            </div>
+        </div>
+
+        <!-- Evidence checklist -->
+        <div class="card" style="margin-top:16px;">
+            <h2 style="margin:0 0 10px;">Evidence (Screenshots Checklist)</h2>
+            <ul class="small" style="margin-top:6px;">
+                <li>✅ Stored XSS in VULNERABLE mode (payload + alert).</li>
+                <li>✅ Same payload in SECURE mode (rendered as text).</li>
+                <li>✅ Leaderboard showing a saved score after login.</li>
+                <li>✅ Network tab showing requests include cookies (<code>credentials: include</code> behavior).</li>
+                <li>✅ If you demo API tampering: screenshot of edited request body + server response (blocked in secure
+                    fix).</li>
+            </ul>
+        </div>
+
+        <!-- Footer note -->
+        <div class="toast" style="margin-top:14px;">
+            Note: This report describes both the vulnerable demo behavior and secure best practices.
+            Update the “implemented” items to match exactly what exists in your code.
+        </div>
+    </div>
+</body>
+
+</html>
