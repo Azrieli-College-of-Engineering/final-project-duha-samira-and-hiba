@@ -1,0 +1,31 @@
+# Memory Game Security Project (Track C)
+
+## Overview
+
+This project implements a simple web-based Memory Game
+while demonstrating common web security vulnerabilities
+and their secure fixes.
+
+The repository contains two backend implementations:
+
+- Vulnerable version (for attack demonstration)
+- Secure version (final protected implementation)
+
+The purpose of this project is to clearly show:
+
+- How common web vulnerabilities are introduced
+- How they can be exploited
+- How they can be properly mitigated
+
+---
+
+# Tech Stack
+
+- Frontend: HTML, CSS, Vanilla JavaScript
+- Backend: Node.js, Express
+- Database: SQLite (better-sqlite3)
+- Authentication: express-session (cookie-based)
+
+---
+
+# Project Structure

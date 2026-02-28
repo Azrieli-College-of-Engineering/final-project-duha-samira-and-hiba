@@ -1,8 +1,10 @@
 # Limitations and Future Work
 
-Although the secure version significantly improves the application’s security,
-some limitations still exist. This section explains what is currently missing
-and what could be improved in a real production environment.
+Although the secure version significantly improves the application's security,
+some limitations still exist.  
+
+This section explains what is currently missing and what would be required
+to make this system production-ready in a real-world deployment.
 
 ---
 
@@ -10,11 +12,16 @@ and what could be improved in a real production environment.
 
 ## 1️⃣ No HTTPS (Local Development Only)
 
-The application runs locally without HTTPS encryption.
+The application runs locally over HTTP without TLS encryption.
 
-Impact:
+### Impact
 - Data is transmitted in plain text.
-- In a real production environment, HTTPS would be mandatory.
+- Session cookies are not protected against network interception.
+- Man-in-the-Middle (MITM) attacks would be possible in a public network.
+
+### Future Improvement
+- Deploy using HTTPS with TLS certificates.
+- Enable `secure: true` for session cookies in production.
 
 ---
 
@@ -22,12 +29,14 @@ Impact:
 
 The project uses session-based authentication but does not implement CSRF tokens.
 
-Impact:
+### Impact
 - A malicious website could potentially trigger authenticated requests
-  if additional protections are not added.
+  from a logged-in user.
+- State-changing operations (e.g., saving scores) could be abused.
 
-Future improvement:
+### Future Improvement
 - Implement CSRF tokens for all state-changing requests.
+- Use libraries such as `csurf`.
 
 ---
 
@@ -36,12 +45,14 @@ Future improvement:
 If passwords are stored in plain text (depending on implementation),
 this is not secure.
 
-Impact:
-- If the database is leaked, all passwords are exposed.
+### Impact
+- If the database is leaked, all user passwords are exposed.
+- Password reuse across other services increases damage risk.
 
-Future improvement:
-- Use bcrypt for hashing passwords.
-- Enforce stronger password policies.
+### Future Improvement
+- Use `bcrypt` for password hashing.
+- Apply salting and proper hashing cost factor.
+- Enforce stronger password policies (length, complexity).
 
 ---
 
@@ -49,64 +60,91 @@ Future improvement:
 
 The login endpoint does not implement brute-force protection.
 
-Impact:
-- An attacker could attempt multiple login attempts rapidly.
+### Impact
+- Attackers could attempt multiple login attempts rapidly.
+- Credential stuffing attacks become possible.
 
-Future improvement:
-- Add rate limiting middleware.
-- Implement account lockout after multiple failed attempts.
+### Future Improvement
+- Add rate limiting middleware (e.g., express-rate-limit).
+- Implement temporary account lockout after repeated failures.
 
 ---
 
 ## 5️⃣ Minimal Security Headers
 
-The application does not include advanced security headers such as:
+The application does not include advanced HTTP security headers such as:
 
 - Content Security Policy (CSP)
 - Strict-Transport-Security (HSTS)
 - X-Frame-Options
+- X-Content-Type-Options
 
-Future improvement:
-- Use helmet.js to configure proper security headers.
+### Impact
+- Increased exposure to clickjacking and content injection risks.
+- Reduced browser-side protection mechanisms.
+
+### Future Improvement
+- Use `helmet.js` to configure proper security headers.
+- Define a strict Content Security Policy.
 
 ---
 
 ## 6️⃣ Limited Input Validation
 
-Basic validation exists, but it is minimal.
+Basic validation exists, but it is minimal and not centralized.
 
-Future improvement:
-- Use a validation library (e.g., Joi or express-validator)
-- Apply centralized validation for all endpoints.
+### Impact
+- Inconsistent validation logic.
+- Increased risk of future vulnerabilities when adding new endpoints.
+
+### Future Improvement
+- Use a validation library (e.g., Joi or express-validator).
+- Apply centralized validation middleware.
+- Implement schema-based request validation.
 
 ---
 
-# Future Improvements Summary
+# Additional Production Improvements
 
-To make this application production-ready, the following should be implemented:
+To make this application production-ready, the following should also be implemented:
 
-- HTTPS with secure cookies
+- HTTPS with secure cookie configuration
 - CSRF protection
 - Strong password hashing (bcrypt)
-- Rate limiting and brute-force protection
+- Rate limiting and brute-force detection
 - Security headers configuration
 - Centralized input validation
 - Logging and monitoring system
-- Automated security testing
+- Automated security testing (SAST/DAST)
+- Proper error handling without leaking internal details
+
+---
+
+# Security Principles Demonstrated
+
+This project reinforces important security principles:
+
+- Never trust client input  
+- Always enforce server-side authorization  
+- Treat user input as untrusted data  
+- Use parameterized queries  
+- Apply defense-in-depth strategies  
 
 ---
 
 # Conclusion
 
 This project demonstrates how common web vulnerabilities
-can be introduced and how they can be effectively mitigated.
+can be introduced through small implementation mistakes,
+and how they can be effectively mitigated using secure coding practices.
 
 While the secure version significantly improves protection,
-additional security layers would be required in a real-world deployment.
+a real-world production deployment would require additional
+layers of security and operational safeguards.
 
 The project highlights the importance of:
 
-- Secure coding practices
-- Proper authentication and authorization
-- Safe handling of user input
-- Defense-in-depth security strategy
+- Secure backend design  
+- Proper authentication and authorization  
+- Safe handling of user-generated content  
+- Continuous security improvement  

@@ -1,171 +1,185 @@
-Secure vs Vulnerable Comparison
+# Secure vs Vulnerable Comparison
 
 This document compares the vulnerable backend implementation
 with the secure backend implementation of the Memory Game project.
 
-The purpose is to clearly demonstrate:
+The purpose of this comparison is to clearly demonstrate:
 
-What the vulnerabilities were
+- What the vulnerabilities were  
+- How they were exploited  
+- How they were fixed  
+- Why the fixes are effective  
 
-How they were exploited
+---
 
-How they were fixed
-
-Why the fixes are effective
-
-Project Versions
+# Project Versions
 
 This repository contains two backend branches:
 
-Vulnerable version:
-git checkout feat/backend-vuln
+## Vulnerable Version
 
-Secure version:
-git checkout feat/backend-secure
+Switch to:
 
-The vulnerable branch is used only for demonstrating attacks.
-The secure branch contains the final protected implementation.
+    git checkout feat/backend-vuln
 
-Vulnerability Comparison Table
-Vulnerability	Vulnerable Behavior	Exploit Example	Secure Fix
-SQL Injection	SQL query built using string concatenation	' OR 1=1 --	Parameterized queries (? placeholders)
-Broken Access Control (IDOR)	Client controls userId	Modify another user’s score	Use req.session.user.id only
-Stored XSS	User input rendered using unsafe innerHTML	<script>alert('XSS')</script>	Render using textContent
-1️⃣ SQL Injection
-Vulnerable Implementation
+This branch is used only for demonstrating successful attacks.
 
-The login endpoint builds the SQL query using direct user input.
+## Secure Version
 
-Example (vulnerable logic):
+Switch to:
 
-const query = "SELECT * FROM users WHERE username = '" + username + "' AND password = '" + password + "'";
+    git checkout feat/backend-secure
 
-This allows attackers to inject malicious SQL code.
+This branch contains the final protected implementation.
 
-Exploit payload:
+---
 
-' OR 1=1 --
+# Vulnerability Comparison Table
 
-This bypasses authentication.
+| Vulnerability | Vulnerable Behavior | Exploit Example | Secure Fix |
+|---------------|--------------------|-----------------|------------|
+| SQL Injection | SQL query built using string concatenation | `' OR 1=1 --` | Parameterized queries (`?` placeholders) |
+| Broken Access Control (IDOR) | Client controls `userId` | Modify another user’s score | Use `req.session.user.id` only |
+| Stored XSS | User input rendered using unsafe `innerHTML` | `<script>alert('XSS')</script>` | Render using `textContent` |
 
-Secure Implementation
+---
+
+# 1️⃣ SQL Injection
+
+## Vulnerable Implementation
+
+The login endpoint builds the SQL query using direct user input:
+
+    const query = "SELECT * FROM users WHERE username = '" + username + "' AND password = '" + password + "'";
+
+Because user input is directly inserted into the query,
+attackers can inject malicious SQL code.
+
+### Exploit Payload
+
+    ' OR 1=1 --
+
+This payload bypasses authentication and logs in without valid credentials.
+
+## Secure Implementation
 
 The secure version uses parameterized queries:
 
-db.prepare("SELECT * FROM users WHERE username = ? AND password = ?")
-  .get(username, password);
+    db.prepare("SELECT * FROM users WHERE username = ? AND password = ?")
+      .get(username, password);
 
-Why this works:
+### Why This Fix Works
 
-User input is treated strictly as data
+- User input is treated strictly as data  
+- The SQL structure cannot be modified  
+- Injection payloads are interpreted as plain text  
+- Authentication bypass is prevented  
 
-SQL structure cannot be modified
+---
 
-Injection payloads fail
+# 2️⃣ Broken Access Control (IDOR)
 
-2️⃣ Broken Access Control (IDOR)
-Vulnerable Implementation
+## Vulnerable Implementation
 
 The vulnerable version allowed clients to send:
 
-{
-  "userId": 2,
-  "score": 9999
-}
+    {
+      "userId": 2,
+      "score": 9999
+    }
 
-The backend trusted this userId without verifying ownership.
+The backend trusted this `userId` without verifying ownership.
 
 This allowed one user to modify another user’s score.
 
-Secure Implementation
+## Secure Implementation
 
-The secure version ignores any client-provided userId.
+The secure version ignores any client-provided `userId`.
 
 Instead, it uses the authenticated session user:
 
-const userId = req.session.user.id;
+    const userId = req.session.user.id;
 
-And enforces authentication using middleware:
+Authentication is enforced using middleware:
 
-router.post("/score", requireAuth, (req, res) => {
+    router.post("/score", requireAuth, (req, res) => {
 
-Why this works:
+### Why This Fix Works
 
-Only logged-in users can submit scores
+- Only logged-in users can submit scores  
+- The server controls identity using session data  
+- Users cannot manipulate other users' records  
+- Privilege escalation is prevented  
 
-Users cannot manipulate other users' data
+---
 
-Privilege escalation is prevented
+# 3️⃣ Stored XSS
 
-3️⃣ Stored XSS
-Vulnerable Implementation
+## Vulnerable Implementation
 
 User comments were rendered using unsafe DOM methods such as:
 
-element.innerHTML = comment.content;
+    element.innerHTML = comment.content;
 
 If a user submitted:
 
-<script>alert('XSS')</script>
+    <script>alert('XSS')</script>
 
 The script would execute when displayed.
 
-Security impact:
+### Security Impact
 
-Arbitrary JavaScript execution
+- Arbitrary JavaScript execution  
+- Session hijacking  
+- Account takeover  
+- Website defacement  
 
-Session hijacking
-
-Account takeover
-
-Secure Implementation
+## Secure Implementation
 
 The secure version renders user content safely:
 
-element.textContent = comment.content;
+    element.textContent = comment.content;
 
-Why this works:
+### Why This Fix Works
 
-The browser treats content as plain text
+- The browser treats content as plain text  
+- Script tags are not executed  
+- Malicious input becomes harmless text  
+- Client-side execution of injected code is prevented  
 
-Script tags are not executed
+---
 
-Malicious input becomes harmless text
-
-Validation of Fixes
+# Validation of Fixes
 
 After switching to:
 
-git checkout feat/backend-secure
+    git checkout feat/backend-secure
 
-Previously working attack payloads:
+Previously successful attack payloads behave as follows:
 
-SQL Injection → Fails
-
-Score tampering → Fails
-
-XSS payload → Displayed as text only
+- SQL Injection → Fails  
+- Score tampering → Fails  
+- XSS payload → Displayed as harmless text  
 
 This confirms that the implemented security mechanisms
-effectively mitigate the vulnerabilities.
+effectively mitigate the demonstrated vulnerabilities.
 
-Security Principles Demonstrated
+---
 
-This project demonstrates:
+# Security Principles Demonstrated
 
-Never trust client input
+This project demonstrates the following core security principles:
 
-Always validate and sanitize user data
+- Never trust client input  
+- Always validate and sanitize user data  
+- Enforce server-side authorization  
+- Use parameterized queries for database operations  
+- Render user-generated content safely  
+- Separate vulnerable demonstration code from production-ready secure code  
 
-Enforce server-side authorization
+---
 
-Use parameterized queries for database operations
-
-Render user-generated content safely
-
-Separate vulnerable demo from production-ready secure version
-
-Conclusion
+# Conclusion
 
 The comparison between the vulnerable and secure implementations
 clearly illustrates how small coding decisions can introduce
@@ -174,3 +188,6 @@ serious security risks.
 By applying secure coding practices,
 the same application becomes significantly more resilient
 against common web attacks.
+
+This project highlights the importance of defensive programming
+and secure backend design in modern web applications.

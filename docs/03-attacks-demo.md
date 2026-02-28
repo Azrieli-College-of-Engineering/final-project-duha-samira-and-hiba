@@ -1,11 +1,14 @@
 # Attacks Demonstration (Vulnerable Version)
 
 This document explains how to reproduce the security vulnerabilities
-using the vulnerable backend branch:
+using the vulnerable backend branch.
 
-git checkout feat/backend-vuln
+Switch to:
+
+    git checkout feat/backend-vuln
 
 Make sure the backend is running on:
+
 http://localhost:3000
 
 ---
@@ -14,10 +17,10 @@ http://localhost:3000
 
 ## Where is the bug?
 
-In the vulnerable version, the login query is built using string concatenation
+In the vulnerable version, the login query is constructed using string concatenation
 instead of parameterized queries.
 
-This allows attackers to inject SQL into the query.
+This allows attackers to inject malicious SQL into the query.
 
 ## Attack Steps
 
@@ -26,20 +29,26 @@ POST /api/login
 
 Body (raw → JSON):
 
-{
-  "username": "' OR 1=1 --",
-  "password": "x"
-}
+    {
+      "username": "' OR 1=1 --",
+      "password": "x"
+    }
 
 ## Expected Result
 
 Login succeeds without valid credentials.
 
-The backend returns a valid user session.
+The backend returns a valid authenticated session.
+
+## Security Impact
+
+- Authentication bypass  
+- Unauthorized system access  
+- Potential full account compromise  
 
 ## Screenshot (Vulnerable)
 
-![SQL Injection Vulnerable](screenshots/01-sqli-vulnerable.png)
+![SQL Injection Vulnerable](./Screenshots/01-sqli-vulnerable.png)
 
 ---
 
@@ -47,8 +56,8 @@ The backend returns a valid user session.
 
 ## Where is the bug?
 
-The vulnerable version accepts userId from the client request
-without verifying ownership.
+The vulnerable version trusts the `userId` received from the client request
+without verifying ownership or session identity.
 
 This allows one user to modify another user’s score.
 
@@ -59,10 +68,10 @@ This allows one user to modify another user’s score.
 
 POST /api/score
 
-{
-  "userId": 2,
-  "score": 9999
-}
+    {
+      "userId": 2,
+      "score": 9999
+    }
 
 3. Verify using leaderboard endpoint.
 
@@ -70,13 +79,19 @@ POST /api/score
 
 Bob’s score is modified to 9999.
 
+## Security Impact
+
+- Privilege escalation  
+- Data integrity violation  
+- Unauthorized data manipulation  
+
 ## Screenshot – Tampered Score
 
-![Score Tampering Vulnerable](screenshots/03-score-vulnerable.png)
+![Score Tampering Vulnerable](./Screenshots/03-score-vulnerable.png)
 
 ## Screenshot – Leaderboard Result
 
-![Leaderboard After Tampering](screenshots/03b-leaderboard-after-tampering.png)
+![Leaderboard After Tampering](./Screenshots/03b-leaderboard-after-tampering.png)
 
 ---
 
@@ -85,29 +100,38 @@ Bob’s score is modified to 9999.
 ## Where is the bug?
 
 User input (comment content) is stored in the database
-and rendered in the frontend using unsafe rendering (innerHTML).
+and rendered in the frontend using unsafe rendering (`innerHTML`).
+
+No output encoding is applied before displaying user-controlled content.
 
 ## Attack Steps
 
 POST /api/comment
 
-{
-  "content": "<script>alert('XSS')</script>"
-}
+    {
+      "content": "<script>alert('XSS')</script>"
+    }
 
 Then open the comments section in the frontend.
 
 ## Expected Result
 
-The script executes when comments are displayed.
+The malicious script executes when comments are displayed.
+
+## Security Impact
+
+- Session hijacking  
+- Account takeover  
+- Arbitrary JavaScript execution  
+- Website defacement  
 
 ## Screenshot – Payload Submission
 
-![XSS Post Vulnerable](screenshots/05a-xss-post-vulnerable.png)
+![XSS Post Vulnerable](./Screenshots/05a-xss-post-vulnerable.png)
 
 ## Screenshot – Stored Script in Comments
 
-![XSS Stored Vulnerable](screenshots/05b-xss-get-vulnerable.png)
+![XSS Stored Vulnerable](./Screenshots/05b-xss-get-vulnerable.png)
 
 ---
 
@@ -115,6 +139,6 @@ The script executes when comments are displayed.
 
 All the above attacks should FAIL when switching to:
 
-git checkout feat/backend-secure
+    git checkout feat/backend-secure
 
-This demonstrates the effectiveness of implemented security fixes.
+This demonstrates the effectiveness of the implemented security fixes.
