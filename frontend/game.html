@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Memory Game — Play</title>
     <link rel="stylesheet" href="./css/styles.css" />
 </head>
@@ -62,7 +62,9 @@
                     </div>
                 </div>
 
-                <div id="board" class="board"></div>
+                <div class="boardWrap">
+                    <div id="board" class="board"></div>
+                </div>
 
                 <div class="row" style="margin-top:14px;">
                     <button id="saveScoreBtn" class="btn btn-ghost">Save Score</button>
@@ -70,11 +72,11 @@
                 </div>
 
                 <div class="hint">
-                    Demo tips:
+                    Tips:
                     <ul style="margin:8px 0 0 18px;">
-                        <li>Score tampering: edit <b>mg_scores</b> in LocalStorage.</li>
-                        <li>Identity tampering: edit <b>mg_session</b> in LocalStorage.</li>
-                        <li>XSS: use VULNERABLE mode in comments.</li>
+                        <li>Try to remember positions before flipping.</li>
+                        <li>Fewer moves = better score.</li>
+                        <li>Increase difficulty for a challenge.</li>
                     </ul>
                 </div>
             </div>
@@ -85,14 +87,15 @@
                     <div>
                         <h2 style="margin-bottom:6px;">Comments</h2>
                         <div class="small">Vulnerable uses <b>innerHTML</b> (Stored XSS demo). Secure uses
-                            <b>textContent</b>.</div>
+                            <b>textContent</b>.
+                        </div>
                     </div>
 
                     <div class="field" style="min-width:170px; margin-top:0;">
                         <label for="modeSelect">Mode</label>
                         <select id="modeSelect">
+                            <option value="secure" selected>SECURE</option>
                             <option value="vuln">VULNERABLE</option>
-                            <option value="secure">SECURE</option>
                         </select>
                     </div>
                 </div>
@@ -152,11 +155,11 @@
             </div>
 
             <div class="row" style="margin-top:14px;">
-                <button id="winSaveBtn" class="btn">Save Score</button>
                 <button id="playAgainBtn" class="btn btn-ghost">Play Again</button>
             </div>
 
-            <div class="hint" style="margin-top:10px;">Tip: Try the <b>VULNERABLE</b> comment mode for Stored XSS demo.
+            <div class="hint" style="margin-top:10px;">
+                Tip: Challenge yourself by completing the game in fewer moves.
             </div>
         </div>
     </div>

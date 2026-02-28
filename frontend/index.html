@@ -15,14 +15,13 @@
                 <h1>Memory Game</h1>
                 <p>Web Security Final Project — Vulnerable vs Secure demo</p>
             </div>
-            <div class="badge">🎯 Goal: show XSS / Auth issues, then fix them</div>
+            <div class="badge">🎯 Security Demo: Vulnerable vs Secure</div>
         </div>
 
         <div class="grid2">
             <div class="card">
                 <h2>Login</h2>
-                <div class="small">Use any username/password for now (mock). Later it connects to backend.</div>
-
+                <div class="small">Log in with your account to play.</div>
                 <div class="field">
                     <label for="loginUser">Username</label>
                     <input id="loginUser" placeholder="e.g. duha" autocomplete="username" />
@@ -43,8 +42,7 @@
 
             <div class="card">
                 <h2>Register</h2>
-                <div class="small">Mock register today. Tomorrow: real API call + session cookie.</div>
-
+                <div class="small">Create a new account to start playing.</div>
                 <div class="field">
                     <label for="regUser">Username</label>
                     <input id="regUser" placeholder="choose username" autocomplete="username" />
@@ -57,7 +55,7 @@
 
                 <div class="row" style="margin-top:14px;">
                     <button id="registerBtn" class="btn btn-warn">Register</button>
-                    <span class="small">After register you can login.</span>
+                    <span class="small">You can log in after registration.</span>
                 </div>
 
                 <div id="regMsg" class="toast" style="display:none;"></div>
@@ -66,8 +64,7 @@
 
         <div class="hr"></div>
         <div class="small">
-            Tip: Later you will demonstrate vulnerabilities (SQLi / Stored XSS / Broken Auth) and then secure fixes.
-        </div>
+            Tip: Keep your account secure and avoid sharing your password. </div>
     </div>
 
     <script type="module" src="./js/auth.js"></script>

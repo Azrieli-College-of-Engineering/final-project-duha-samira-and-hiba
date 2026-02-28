@@ -1,6 +1,9 @@
 import {
     getSession,
+    setSession,
     clearSession,
+    me,
+    logout,
     saveScore,
     getScores,
     postComment,
@@ -10,15 +13,17 @@ import {
 
 const $ = (id) => document.getElementById(id);
 
+let scoreSavedThisRun = false;
+
 const boardEl = $("board");
 const userPill = $("userPill");
 const timePill = $("timePill");
 const scorePill = $("scorePill");
 
 const restartBtn = $("restartBtn");
-const resetDemoBtn = $("resetDemoBtn"); // NEW
+const resetDemoBtn = $("resetDemoBtn");
 const logoutBtn = $("logoutBtn");
-const saveScoreBtn = $("saveScoreBtn") || $("saveScore"); // supports old/new id
+const saveScoreBtn = $("saveScoreBtn") || $("saveScore");
 const saveMsg = $("saveMsg");
 
 const difficultySelect = $("difficultySelect");
@@ -41,7 +46,6 @@ const commentMsg = $("commentMsg");
 
 const leaderBody = $("leaderBody");
 
-// Big pool so we can support multiple board sizes.
 const ICON_POOL = [
     "🍉", "🍇", "🥑", "🍍", "🍋", "🥝", "🍒", "🍓",
     "🍑", "🍊", "🍏", "🍌", "🥥", "🍈", "🫐", "🍐",
@@ -58,6 +62,8 @@ let pairsTotal = 8;
 let timerId = null;
 let startMs = 0;
 let finished = false;
+
+let currentUser = "guest";
 
 function toast(el, msg, type = "") {
     if (!el) return;
@@ -99,10 +105,6 @@ function renderBoard() {
         if (c.matched) div.classList.add("is-matched");
 
         div.disabled = c.matched || finished;
-        div.setAttribute(
-            "aria-label",
-            c.revealed || c.matched ? `Card ${idx + 1}: ${c.icon}` : `Card ${idx + 1}`
-        );
 
         const inner = document.createElement("div");
         inner.className = "tileInner";
@@ -192,7 +194,6 @@ function handleClick(idx) {
 
 function openWinModal() {
     if (!winOverlay) return;
-
     const t = elapsedSeconds();
     if (winTime) winTime.textContent = `${t}s`;
     if (winMoves) winMoves.textContent = String(moves);
@@ -216,6 +217,10 @@ function difficultyConfig() {
 }
 
 function resetGame() {
+    scoreSavedThisRun = false;
+    if (saveScoreBtn) saveScoreBtn.disabled = false;
+    if (winSaveBtn) winSaveBtn.disabled = false;
+
     finished = false;
     lock = false;
     flipped = [];
@@ -230,7 +235,11 @@ function resetGame() {
     updateStats();
 
     const chosen = ICON_POOL.slice(0, pairsTotal);
-    const deck = chosen.concat(chosen).map((icon) => ({ icon, revealed: false, matched: false }));
+    const deck = chosen.concat(chosen).map((icon) => ({
+        icon,
+        revealed: false,
+        matched: false,
+    }));
 
     for (let i = deck.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -254,9 +263,9 @@ function escapeHtml(s) {
         .replace(/'/g, "&#039;");
 }
 
-function refreshComments() {
-    const mode = modeSelect.value; // "vuln" or "secure"
-    const items = getComments(12);
+async function refreshComments() {
+    const mode = (modeSelect?.value || "secure");
+    const items = await getComments(12);
 
     commentsList.innerHTML = "";
     items.forEach((c) => {
@@ -267,10 +276,8 @@ function refreshComments() {
         div.className = "commentItem";
 
         if (mode === "vuln") {
-            // demo: vulnerable (intentionally)
             div.innerHTML = `<b>${escapeHtml(user)}:</b> ${text}`;
         } else {
-            // secure: render user + text safely
             div.innerHTML = `<b>${escapeHtml(user)}:</b> `;
             div.appendChild(document.createTextNode(text));
         }
@@ -279,8 +286,8 @@ function refreshComments() {
     });
 }
 
-function refreshLeaderboard() {
-    const scores = getScores(10);
+async function refreshLeaderboard() {
+    const scores = await getScores(10);
     leaderBody.innerHTML = "";
 
     scores.forEach((s) => {
@@ -303,51 +310,88 @@ function refreshLeaderboard() {
     });
 }
 
+/**
+ * ✅ THE FIX:
+ * user pill comes from /api/me (session cookie), not localStorage
+ * fallback to localStorage if backend isn't reachable
+ */
+async function refreshUserPill() {
+    try {
+        const data = await me(); // { user: {id, username} } OR { user: null }
+        if (data?.user?.id && data?.user?.username) {
+            setSession(data.user); // keep local copy for saveScore/comment
+            currentUser = data.user.username;
+        } else {
+            clearSession();
+            currentUser = "guest";
+        }
+    } catch {
+        // backend not reachable => fallback to localStorage
+        const sess = getSession();
+        currentUser = sess?.user?.username || "guest";
+    }
+
+    userPill.textContent = `User: ${currentUser}`;
+}
+
 // events
 restartBtn.addEventListener("click", resetGame);
 difficultySelect?.addEventListener("change", resetGame);
 
-resetDemoBtn?.addEventListener("click", () => {
-    const ok = confirm(
-        "Reset demo data?\n\nThis will clear:\n- scores\n- comments\n- session\n\nUsers will be kept."
-    );
+resetDemoBtn?.addEventListener("click", async () => {
+    const ok = confirm("Reset demo session?\n\nThis will logout current user.\n(DB data stays.)");
     if (!ok) return;
 
     stopTimer();
-    resetDemoData({ keepUsers: true });
-    const sess = getSession();
-    userPill.textContent = `User: ${sess.user}`;
+    await resetDemoData();
+    await refreshUserPill();
 
-    // clean UI
     if (saveMsg) saveMsg.style.display = "none";
     if (commentInput) commentInput.value = "";
 
-    // refresh
-    refreshLeaderboard();
-    refreshComments();
+    await refreshLeaderboard();
+    await refreshComments();
     resetGame();
 });
 
-logoutBtn.addEventListener("click", () => {
+logoutBtn.addEventListener("click", async () => {
     stopTimer();
-    clearSession();
+    await logout().catch(() => { });
     window.location.href = "./index.html";
 });
 
 if (saveScoreBtn) {
-    saveScoreBtn.addEventListener("click", () => {
-        const sess = getSession();
-        saveScore(sess.user, score);
-        toast(saveMsg, "Saved locally (backend not running).", "ok");
-        refreshLeaderboard();
+    saveScoreBtn.addEventListener("click", async () => {
+        if (scoreSavedThisRun) {
+            return toast(saveMsg, "Score already saved for this game ✅", "bad");
+        }
+
+        const res = await saveScore(score);
+        if (!res?.ok) return toast(saveMsg, "Login first to save score.", "bad");
+
+        scoreSavedThisRun = true;
+        saveScoreBtn.disabled = true;
+        if (winSaveBtn) winSaveBtn.disabled = true;
+
+        toast(saveMsg, "Score saved to backend.", "ok");
+        await refreshLeaderboard();
     });
 }
 
-winSaveBtn?.addEventListener("click", () => {
-    const sess = getSession();
-    saveScore(sess.user, score);
-    toast(saveMsg, "Saved locally (backend not running).", "ok");
-    refreshLeaderboard();
+winSaveBtn?.addEventListener("click", async () => {
+    if (scoreSavedThisRun) {
+        return toast(saveMsg, "Score already saved for this game ✅", "bad");
+    }
+
+    const res = await saveScore(score);
+    if (!res?.ok) return toast(saveMsg, "Login first to save score.", "bad");
+
+    scoreSavedThisRun = true;
+    if (saveScoreBtn) saveScoreBtn.disabled = true;
+    winSaveBtn.disabled = true;
+
+    toast(saveMsg, "Score saved to backend.", "ok");
+    await refreshLeaderboard();
 });
 
 playAgainBtn?.addEventListener("click", () => {
@@ -361,26 +405,28 @@ winOverlay?.addEventListener("click", (e) => {
     if (e.target === winOverlay) closeWinModal();
 });
 
-addCommentBtn.addEventListener("click", () => {
+addCommentBtn.addEventListener("click", async () => {
     const txt = commentInput.value;
-    if (!txt || !txt.trim()) {
-        return toast(commentMsg, "Please enter a comment.", "bad");
-    }
+    if (!txt || !txt.trim()) return toast(commentMsg, "Please enter a comment.", "bad");
 
-    const sess = getSession();
-    postComment(sess.user, txt);
+    const res = await postComment(txt);
+    if (!res?.ok) return toast(commentMsg, "Login first to comment.", "bad");
+
     commentInput.value = "";
-    toast(commentMsg, "Comment added.", "ok");
+    toast(commentMsg, "Comment saved to backend.", "ok");
+    await refreshComments();
+});
+
+modeSelect.addEventListener("change", () => {
     refreshComments();
 });
 
-modeSelect.addEventListener("change", refreshComments);
-
 // init
-(function init() {
-    const sess = getSession();
-    userPill.textContent = `User: ${sess.user}`;
+(async function init() {
+    await refreshUserPill();
     resetGame();
-    refreshLeaderboard();
-    refreshComments();
+    await refreshLeaderboard();
+
+    if (modeSelect) modeSelect.value = "secure";
+    await refreshComments();
 })();
