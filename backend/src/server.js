@@ -1,4 +1,3 @@
-const path = require("path");
 const express = require("express");
 const session = require("express-session");
 const path = require("path");
@@ -13,9 +12,9 @@ const app = express();
 app.disable("x-powered-by");
 
 app.use(express.json());
-app.use(express.static(path.join(__dirname, "../../frontend")));
 
-app.use(express.static(path.join(__dirname, "..", "..", "..", "frontend")));
+// serve frontend
+app.use(express.static(path.join(__dirname, "../../frontend")));
 
 app.use(
   session({
