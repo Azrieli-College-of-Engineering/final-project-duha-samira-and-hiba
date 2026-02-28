@@ -3,10 +3,7 @@
 // IMPORTANT: open pages from http://localhost:3000 (same origin)
 
 const KEY_SESSION = "mg_session";
-const KEY_MODE = "mg_mode";
-function getMode() {
-    return localStorage.getItem(KEY_MODE) || "secure";
-}
+
 // -------------------- helpers --------------------
 async function apiFetch(path, options = {}) {
     const res = await fetch(path, {
@@ -37,9 +34,6 @@ export function setSession(user) {
 
 export function clearSession() {
     localStorage.removeItem(KEY_SESSION);
-    localStorage.removeItem("mg_user");
-    localStorage.removeItem("mg_username");
-    localStorage.removeItem("mg_session_user");
 }
 
 export function getSession() {
@@ -50,13 +44,6 @@ export function getSession() {
             if (s?.user?.username) return s;
         }
     } catch { }
-
-    const old = localStorage.getItem("mg_user");
-    if (old) {
-        const migrated = { user: { id: null, username: old }, ts: Date.now() };
-        localStorage.setItem(KEY_SESSION, JSON.stringify(migrated));
-        return migrated;
-    }
 
     return { user: { id: null, username: "guest" }, ts: Date.now() };
 }
@@ -70,11 +57,7 @@ export async function register(username, password) {
 }
 
 export async function login(username, password) {
-    const mode = getMode(); // "secure" | "vuln"
-
-    const path = mode === "vuln" ? "/api/login" : "/api/login-secure";
-
-    const data = await apiFetch(path, {
+    const data = await apiFetch("/api/login", {
         method: "POST",
         body: JSON.stringify({ username, password }),
     });
@@ -90,10 +73,13 @@ export async function logout() {
     return data;
 }
 
+export async function me() {
+    return apiFetch("/api/me", { method: "GET" });
+}
+
 // -------------------- scores --------------------
 export async function saveScore(score) {
-    const sess = getSession();
-    const user = sess?.user;
+    const { user } = getSession();
 
     if (!user?.id) {
         return { ok: false, msg: "Not logged in (guest can't save score)." };
@@ -120,8 +106,7 @@ export async function getScores(limit = 10) {
 
 // -------------------- comments --------------------
 export async function postComment(text) {
-    const sess = getSession();
-    const user = sess?.user;
+    const { user } = getSession();
 
     if (!user?.id) {
         return { ok: false, msg: "Not logged in (guest can't post comments)." };
@@ -151,8 +136,4 @@ export async function resetDemoData() {
     await logout().catch(() => { });
     clearSession();
     return getSession();
-}
-// login, register, logout, saveScore, getScores, postComment, getComments, resetDemoData
-export async function me() {
-    return apiFetch("/api/me", { method: "GET" });
 }

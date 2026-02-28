@@ -38,7 +38,6 @@ const winTime = $("winTime");
 const winMoves = $("winMoves");
 const winScore = $("winScore");
 
-const modeSelect = $("modeSelect");
 const commentInput = $("commentInput");
 const addCommentBtn = $("addCommentBtn");
 const commentsList = $("commentsList");
@@ -264,7 +263,6 @@ function escapeHtml(s) {
 }
 
 async function refreshComments() {
-    const mode = (modeSelect?.value || "secure");
     const items = await getComments(12);
 
     commentsList.innerHTML = "";
@@ -275,12 +273,8 @@ async function refreshComments() {
         const div = document.createElement("div");
         div.className = "commentItem";
 
-        if (mode === "vuln") {
-            div.innerHTML = `<b>${escapeHtml(user)}:</b> ${text}`;
-        } else {
-            div.innerHTML = `<b>${escapeHtml(user)}:</b> `;
-            div.appendChild(document.createTextNode(text));
-        }
+        div.innerHTML = `<b>${escapeHtml(user)}:</b> `;
+        div.appendChild(document.createTextNode(text));
 
         commentsList.appendChild(div);
     });
@@ -311,8 +305,7 @@ async function refreshLeaderboard() {
 }
 
 /**
- * ✅ THE FIX:
- * user pill comes from /api/me (session cookie), not localStorage
+ * user pill comes from /api/me (session cookie)
  * fallback to localStorage if backend isn't reachable
  */
 async function refreshUserPill() {
@@ -424,13 +417,5 @@ addCommentBtn.addEventListener("click", async () => {
     await refreshUserPill();
     resetGame();
     await refreshLeaderboard();
-
-    const savedMode = localStorage.getItem("mg_mode") || "secure";
-
-    if (modeSelect) {
-        modeSelect.value = savedMode;
-        modeSelect.disabled = true; // 🔒 يمنع التغيير
-    }
-
-    await refreshComments(); // ✅ مهم جداً
+    await refreshComments(); 
 })();
