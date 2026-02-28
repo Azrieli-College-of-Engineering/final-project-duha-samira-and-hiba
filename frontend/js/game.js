@@ -417,9 +417,7 @@ addCommentBtn.addEventListener("click", async () => {
     await refreshComments();
 });
 
-modeSelect.addEventListener("change", () => {
-    refreshComments();
-});
+
 
 // init
 (async function init() {
@@ -427,6 +425,12 @@ modeSelect.addEventListener("change", () => {
     resetGame();
     await refreshLeaderboard();
 
-    if (modeSelect) modeSelect.value = "secure";
-    await refreshComments();
+    const savedMode = localStorage.getItem("mg_mode") || "secure";
+
+    if (modeSelect) {
+        modeSelect.value = savedMode;
+        modeSelect.disabled = true; // 🔒 يمنع التغيير
+    }
+
+    await refreshComments(); // ✅ مهم جداً
 })();
