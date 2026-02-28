@@ -81,23 +81,17 @@
                 <div class="row" style="align-items:flex-start;">
                     <div>
                         <h2 style="margin-bottom:6px;">Comments</h2>
-                        <div class="small">Vulnerable (Stored XSS demo).Secure mode escapes HTML.
+                        <div class="small">Vulnerable build (Stored XSS demo). Comments are rendered using innerHTML.
                         </div>
                     </div>
 
-                    <div class="field" style="min-width:170px; margin-top:0;">
-                        <label for="modeSelect">Mode</label>
-                        <select id="modeSelect">
-                            <option value="secure" selected>SECURE</option>
-                            <option value="vuln">VULNERABLE</option>
-                        </select>
-                    </div>
+                
                 </div>
 
                 <div class="field">
                     <label for="commentInput">Write a comment</label>
                     <textarea id="commentInput" rows="3"
-                        placeholder="Try: &lt;img src=x onerror=alert('XSS')&gt; (in vulnerable mode)"></textarea>
+                        placeholder="Try: <img src=x onerror=alert('XSS')> (Stored XSS demo)"></textarea>
                 </div>
 
                 <div class="row" style="margin-top:10px;">
